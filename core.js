@@ -40,6 +40,19 @@ Game.prototype.completeInit = function() {
 
     this.setupBackground();
     this.setupScenes();
+    
+    // Emit scene_loaded for initial scene
+    if (window.emit && this.currentScene) {
+        window.emit({
+            scene: this.currentScene,
+            sub_scene: '',
+            action: 'scene_load',
+            self: '',
+            value: '',
+            target: ''
+        });
+    }
+    
     if (this.gameConfig.game.containerBackground) {
         this.setupBackground('game-container', this.gameConfig.game.containerBackground);
     }
@@ -527,7 +540,53 @@ Game.prototype.createElement = function(element, parentElement) {
         if (element.clickable) {
             img.style.transition = `transform ${this.defaultScaleDuration}ms ease`;
             img.style.transformOrigin = 'center';
+            picture.classList.add('clickable');
+            picture.style.cursor = 'pointer';
             picture.addEventListener('click', () => {
+                // Find target scene from click actions
+                let targetScene = '';
+                if (element.clickActions) {
+                    const navigateAction = element.clickActions.find(action => action.action === 'navigate' && action.target === 'scene');
+                    if (navigateAction) {
+                        targetScene = navigateAction.value;
+                    }
+                }
+                
+                // Determine value for quiz answers or navigation
+                let value = '';
+                if (this.quizConfig && element.clickActions && element.clickActions.some(action => action.action === 'selectAnswer')) {
+                    // This is a quiz answer button
+                    const currentQuestion = this.quizConfig.questions[this.currentQuestionIndex];
+                    const answer = currentQuestion.answers.find(a => a.element === element.id);
+                    if (answer) {
+                        value = answer.correct ? 'correct' : 'incorrect';
+                    }
+                } else if (targetScene) {
+                    // This is a navigation button
+                    value = 'navigate';
+                }
+                
+                // Determine sub_scene
+                let subScene = '';
+                if (this.currentScene === 'quiz' && this.quizConfig && this.currentQuestionIndex >= 0) {
+                    const currentQuestion = this.quizConfig.questions[this.currentQuestionIndex];
+                    if (currentQuestion) {
+                        subScene = currentQuestion.id;
+                    }
+                }
+                
+                // Emit button click event
+                if (window.emit) {
+                    window.emit({
+                        scene: this.currentScene,
+                        sub_scene: subScene,
+                        action: 'button_click',
+                        self: element.id,
+                        value: value,
+                        target: targetScene
+                    });
+                }
+                
                 this.executeClickActions(element.clickActions, img);
             });
         }
@@ -617,6 +676,18 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
         nextSceneEl.style.display = 'block';
         nextSceneEl.classList.remove('hidden');
         this.currentScene = scene;
+
+        // Emit scene_loaded event
+        if (window.emit) {
+            window.emit({
+                scene: scene,
+                sub_scene: '',
+                action: 'scene_load',
+                self: '',
+                value: '',
+                target: ''
+            });
+        }
 
         // Apply scene-specific background overrides
         if (targetSceneConfig.pageBackground) {

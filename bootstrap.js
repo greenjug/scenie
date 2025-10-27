@@ -24,6 +24,11 @@
             } else {
                 scriptName = req.module;
                 moduleVersion = req.version;
+                // Handle special modules
+                if (scriptName === 'emit') {
+                    // Set global verbosity for emit module
+                    window.emitVerbosity = req.verbosity || 'console';
+                }
             }
             const moduleBaseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${moduleVersion}`;
             await loadScript(`${moduleBaseUrl}/${scriptName}.js`);

@@ -170,11 +170,9 @@ Game.prototype.showAffirmation = function(question, selectedAnswers) {
         }
     } else if (affirmation.type === 'animation') {
         const audience = affirmation.audience || 'incorrect';
-        console.log('Applying animation affirmation to', audience, 'answers');
         const targets = audience === 'incorrect' ? answerItems.filter(item => !item.answer.correct) :
                       audience === 'correct' ? answerItems.filter(item => item.answer.correct) :
                       answerItems;
-        console.log('Targets for animation affirmation:', targets);
         targets.forEach(item => {
             const element = item.element;
             const scaleDuration = affirmation.scaleDuration || 500;
@@ -319,6 +317,17 @@ Game.prototype.showCurrentQuestion = function() {
         if (element) {
             if (index === this.currentQuestionIndex) {
                 element.classList.remove('hidden');
+                // Emit scene_loaded for the question
+                if (window.emit) {
+                    window.emit({
+                        scene: 'quiz',
+                        sub_scene: question.id,
+                        action: 'scene_load',
+                        self: '',
+                        value: '',
+                        target: ''
+                    });
+                }
             } else {
                 element.classList.add('hidden');
             }
