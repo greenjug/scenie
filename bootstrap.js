@@ -16,8 +16,15 @@
 
     // Load required modules
     if (config.game.requires && Array.isArray(config.game.requires)) {
-        for (const scriptName of config.game.requires) {
-            const moduleVersion = config.game[`required${scriptName.charAt(0).toUpperCase() + scriptName.slice(1)}Version`] || coreVersion;
+        for (const req of config.game.requires) {
+            let scriptName, moduleVersion;
+            if (typeof req === 'string') {
+                scriptName = req;
+                moduleVersion = config.game[`required${scriptName.charAt(0).toUpperCase() + scriptName.slice(1)}Version`] || coreVersion;
+            } else {
+                scriptName = req.module;
+                moduleVersion = req.version;
+            }
             const moduleBaseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${moduleVersion}`;
             await loadScript(`${moduleBaseUrl}/${scriptName}.js`);
         }
