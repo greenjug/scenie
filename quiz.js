@@ -3,8 +3,8 @@ const SCENIE_QUIZ_VERSION = '0.1.0';
 
 // Quiz-specific functionality for the Scenie game system
 
-// Extend the core QuizGame with quiz methods
-QuizGame.prototype.selectQuizAnswer = function(answerElementId) {
+// Extend the core Game with quiz methods
+Game.prototype.selectQuizAnswer = function(answerElementId) {
     if (!this.quizConfig) return;
 
     const currentQuestion = this.quizConfig.questions[this.currentQuestionIndex];
@@ -48,7 +48,7 @@ QuizGame.prototype.selectQuizAnswer = function(answerElementId) {
     }
 };
 
-QuizGame.prototype.lockQuizAnswers = function() {
+Game.prototype.lockQuizAnswers = function() {
     if (!this.quizConfig) return;
 
     const currentQuestion = this.quizConfig.questions[this.currentQuestionIndex];
@@ -60,7 +60,7 @@ QuizGame.prototype.lockQuizAnswers = function() {
     });
 };
 
-QuizGame.prototype.executeExitAction = function(question) {
+Game.prototype.executeExitAction = function(question) {
     const selectedAnswers = this.selectedAnswers[question.id] || [];
     const correctAnswers = question.answers.filter(a => a.correct);
 
@@ -115,7 +115,7 @@ QuizGame.prototype.executeExitAction = function(question) {
     }
 };
 
-QuizGame.prototype.showAffirmation = function(question, selectedAnswers) {
+Game.prototype.showAffirmation = function(question, selectedAnswers) {
     // Get affirmation with inheritance: question overrides quiz defaults
     const quizAffirmation = this.quizConfig.affirmation;
     const questionAffirmation = question.affirmation;
@@ -191,7 +191,7 @@ QuizGame.prototype.showAffirmation = function(question, selectedAnswers) {
     }
 };
 
-QuizGame.prototype.mergeAffirmations = function(quizAffirmation, questionAffirmation) {
+Game.prototype.mergeAffirmations = function(quizAffirmation, questionAffirmation) {
     // If no quiz affirmation, return question affirmation (or undefined)
     if (!quizAffirmation) return questionAffirmation;
 
@@ -202,7 +202,7 @@ QuizGame.prototype.mergeAffirmations = function(quizAffirmation, questionAffirma
     return this.deepMerge(quizAffirmation, questionAffirmation);
 };
 
-QuizGame.prototype.deepMerge = function(target, source) {
+Game.prototype.deepMerge = function(target, source) {
     const result = { ...target };
 
     for (const key in source) {
@@ -218,7 +218,7 @@ QuizGame.prototype.deepMerge = function(target, source) {
     return result;
 };
 
-QuizGame.prototype.addAffirmationOverlay = function(element, overlayConfig) {
+Game.prototype.addAffirmationOverlay = function(element, overlayConfig) {
     // Create overlay element
     const overlay = document.createElement('div');
     overlay.className = 'affirmation-overlay';
@@ -248,7 +248,7 @@ QuizGame.prototype.addAffirmationOverlay = function(element, overlayConfig) {
     element.appendChild(overlay);
 };
 
-QuizGame.prototype.getOutcomeScene = function() {
+Game.prototype.getOutcomeScene = function() {
     // Calculate overall score
     let correctCount = 0;
     const totalQuestions = this.quizConfig.questions.length;
@@ -278,7 +278,7 @@ QuizGame.prototype.getOutcomeScene = function() {
     return thresholds[thresholds.length - 1]?.scene || 'outcome_incorrect';
 };
 
-QuizGame.prototype.proceedAfterQuestion = function() {
+Game.prototype.proceedAfterQuestion = function() {
     // Check if this is the last question
     if (this.currentQuestionIndex < this.quizConfig.questions.length - 1) {
         // Move to next question
@@ -291,7 +291,7 @@ QuizGame.prototype.proceedAfterQuestion = function() {
     }
 };
 
-QuizGame.prototype.continueFromInterstitial = function() {
+Game.prototype.continueFromInterstitial = function() {
     // Reset interstitial state
     this.isInInterstitial = false;
     this.lastQuestionCorrect = null;
@@ -311,7 +311,7 @@ QuizGame.prototype.continueFromInterstitial = function() {
     }
 };
 
-QuizGame.prototype.showCurrentQuestion = function() {
+Game.prototype.showCurrentQuestion = function() {
     if (!this.quizConfig) return;
 
     const questions = this.quizConfig.questions;
@@ -327,7 +327,7 @@ QuizGame.prototype.showCurrentQuestion = function() {
     });
 };
 
-QuizGame.prototype.resetQuizState = function() {
+Game.prototype.resetQuizState = function() {
     // Don't reset if we're continuing from an interstitial
     if (this.isContinuingFromInterstitial) {
         this.isContinuingFromInterstitial = false;

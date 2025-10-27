@@ -8,7 +8,7 @@ async function fetchGameConfig() {
     return await response.json();
 }
 
-function QuizGame(config) {
+function Game(config) {
     this.gameConfig = config;
     this.currentScene = null;
     this.selectedAnswers = [];
@@ -24,7 +24,7 @@ function QuizGame(config) {
     this.init();
 }
 
-QuizGame.prototype.init = function() {
+Game.prototype.init = function() {
     document.title = this.gameConfig.game.title;
 
     if (this.gameConfig.game.preloadImages) {
@@ -36,7 +36,7 @@ QuizGame.prototype.init = function() {
     }
 };
 
-QuizGame.prototype.completeInit = function() {
+Game.prototype.completeInit = function() {
     // Initialize viewport height for mobile browsers
     const vh = window.innerHeight * 0.01;
     document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -109,7 +109,7 @@ QuizGame.prototype.completeInit = function() {
     });
 };
 
-QuizGame.prototype.handleOrientationChange = function() {
+Game.prototype.handleOrientationChange = function() {
     // Force a complete background and container recalculation
     this.setupBackground();
     if (this.gameConfig.game.containerBackground) {
@@ -135,7 +135,7 @@ QuizGame.prototype.handleOrientationChange = function() {
     document.body.style.display = '';
 };
 
-QuizGame.prototype.preloadAllImages = function() {
+Game.prototype.preloadAllImages = function() {
     return new Promise((resolve) => {
         const { urls, backgroundUrls } = this.collectImageUrls();
         const allUrls = [...urls, ...backgroundUrls];
@@ -240,14 +240,14 @@ QuizGame.prototype.preloadAllImages = function() {
     });
 };
 
-QuizGame.prototype.showLoadingOverlay = function() {
+Game.prototype.showLoadingOverlay = function() {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
         overlay.classList.remove('hidden');
     }
 };
 
-QuizGame.prototype.hideLoadingOverlay = function() {
+Game.prototype.hideLoadingOverlay = function() {
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
         // Add a slight delay for smooth transition
@@ -257,7 +257,7 @@ QuizGame.prototype.hideLoadingOverlay = function() {
     }
 };
 
-QuizGame.prototype.updateLoadingProgress = function(percentage) {
+Game.prototype.updateLoadingProgress = function(percentage) {
     const fill = document.getElementById('loading-fill');
     const percentageText = document.getElementById('loading-percentage');
 
@@ -270,7 +270,7 @@ QuizGame.prototype.updateLoadingProgress = function(percentage) {
     }
 };
 
-QuizGame.prototype.collectImageUrls = function() {
+Game.prototype.collectImageUrls = function() {
     const urls = new Set();
     const backgroundUrls = new Set();
 
@@ -328,7 +328,7 @@ QuizGame.prototype.collectImageUrls = function() {
     return { urls: Array.from(urls), backgroundUrls: Array.from(backgroundUrls) };
 };
 
-QuizGame.prototype.setupBackground = function(elementId = 'background', bgArray = null) {
+Game.prototype.setupBackground = function(elementId = 'background', bgArray = null) {
     if (!bgArray) bgArray = this.gameConfig.game.pageBackground;
     const background = document.getElementById(elementId);
     const width = window.innerWidth;
@@ -422,7 +422,7 @@ QuizGame.prototype.setupBackground = function(elementId = 'background', bgArray 
     }
 };
 
-QuizGame.prototype.setupScenes = function() {
+Game.prototype.setupScenes = function() {
     const gameContainer = document.getElementById('game-container');
     this.gameConfig.scenes.forEach(sceneConfig => {
         const sceneDiv = document.createElement('div');
@@ -448,13 +448,13 @@ QuizGame.prototype.setupScenes = function() {
     });
 };
 
-QuizGame.prototype.createElements = function(elements, parentElement) {
+Game.prototype.createElements = function(elements, parentElement) {
     elements.forEach(element => {
         this.createElement(element, parentElement);
     });
 };
 
-QuizGame.prototype.createElement = function(element, parentElement) {
+Game.prototype.createElement = function(element, parentElement) {
     if (element.type === 'container') {
         const containerDiv = document.createElement('div');
         containerDiv.id = element.id;
@@ -546,7 +546,7 @@ QuizGame.prototype.createElement = function(element, parentElement) {
     }
 };
 
-QuizGame.prototype.executeClickActions = function(actions, targetElement) {
+Game.prototype.executeClickActions = function(actions, targetElement) {
     if (!actions) return;
     actions.forEach(action => {
         if (action.action === 'scale') {
@@ -594,7 +594,7 @@ QuizGame.prototype.executeClickActions = function(actions, targetElement) {
     });
 };
 
-QuizGame.prototype.switchScene = function(scene, duration = this.gameConfig.game.fadeDuration) {
+Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fadeDuration) {
     const currentSceneEl = document.querySelector(`[data-scene="${this.currentScene}"]`);
     const nextSceneEl = document.querySelector(`[data-scene="${scene}"]`);
 
@@ -635,7 +635,7 @@ QuizGame.prototype.switchScene = function(scene, duration = this.gameConfig.game
     }, duration);
 };
 
-QuizGame.prototype.clearScene = function(sceneName) {
+Game.prototype.clearScene = function(sceneName) {
     const sceneElement = document.getElementById(sceneName + '-scene');
     if (sceneElement) {
         this.clearSceneElements(this.gameConfig.scenes.find(s => s.name === sceneName).elements);
@@ -644,7 +644,7 @@ QuizGame.prototype.clearScene = function(sceneName) {
     // Reset quiz state is now handled in switchScene for quiz
 };
 
-QuizGame.prototype.clearSceneElements = function(elements) {
+Game.prototype.clearSceneElements = function(elements) {
     elements.forEach(element => {
         // Clear container elements
         if (element.type === 'container' && element.elements) {
@@ -702,31 +702,14 @@ QuizGame.prototype.clearSceneElements = function(elements) {
     });
 };
 
-QuizGame.prototype.resetGameplay = function() {
+Game.prototype.resetGameplay = function() {
     // Placeholder for gameplay reset - can be overridden
 };
 
 // Dynamic script loading and initialization
 (async () => {
     const config = await fetchGameConfig();
-    
-    // Load required scripts
-    if (config.game.requires && Array.isArray(config.game.requires)) {
-        for (const scriptName of config.game.requires) {
-            await loadScript(scriptName + '.js');
-        }
-    }
-    
-    // Initialize the game
-    new QuizGame(config);
-})();
 
-function loadScript(src) {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-}
+    // Initialize the game
+    new Game(config);
+})();
