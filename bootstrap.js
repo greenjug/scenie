@@ -11,10 +11,24 @@
     // Load from CDN (jsDelivr is more reliable than raw GitHub)
     const baseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${coreVersion}`;
 
+    // Load emit module first if required
+    let emitVersion = null;
+    let emitVerbosity = 'console';
+    if (config.game.requires && Array.isArray(config.game.requires)) {
+        const emitReq = config.game.requires.find(req => (typeof req === 'object' && req.module === 'emit'));
+        if (emitReq) {
+            emitVersion = emitReq.version;
+            emitVerbosity = emitReq.verbosity || 'console';
+            window.emitVerbosity = emitVerbosity;
+            const emitBaseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${emitVersion}`;
+            await loadScript(`${emitBaseUrl}/emit.js`);
+        }
+    }
+
     // Load core framework
     await loadScript(`${baseUrl}/core.js`);
 
-    // Load required modules
+    // Load required modules (excluding emit which is already loaded)
     if (config.game.requires && Array.isArray(config.game.requires)) {
         for (const req of config.game.requires) {
             let scriptName, moduleVersion;
@@ -24,11 +38,8 @@
             } else {
                 scriptName = req.module;
                 moduleVersion = req.version;
-                // Handle special modules
-                if (scriptName === 'emit') {
-                    // Set global verbosity for emit module
-                    window.emitVerbosity = req.verbosity || 'console';
-                }
+                // Skip emit since it's already loaded
+                if (scriptName === 'emit') continue;
             }
             const moduleBaseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${moduleVersion}`;
             await loadScript(`${moduleBaseUrl}/${scriptName}.js`);
