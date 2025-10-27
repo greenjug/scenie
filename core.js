@@ -1,8 +1,5 @@
 "use strict";
 
-// Scenie Framework Core - v0.1.0
-const SCENIE_CORE_VERSION = '0.1.0';
-
 async function fetchGameConfig() {
     const response = await fetch('game.json');
     return await response.json();
@@ -705,11 +702,3 @@ Game.prototype.clearSceneElements = function(elements) {
 Game.prototype.resetGameplay = function() {
     // Placeholder for gameplay reset - can be overridden
 };
-
-// Dynamic script loading and initialization
-(async () => {
-    const config = await fetchGameConfig();
-
-    // Initialize the game
-    new Game(config);
-})();
