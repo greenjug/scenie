@@ -1,0 +1,26 @@
+{
+  "name": "scenie-framework",
+  "version": "0.1.0",
+  "description": "A modular JavaScript framework for creating interactive quizzes and games",
+  "main": "core.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/greenjug/scenie.git"
+  },
+  "keywords": [
+    "game",
+    "quiz",
+    "framework",
+    "javascript",
+    "interactive"
+  ],
+  "author": "greenjug",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/greenjug/scenie/issues"
+  },
+  "homepage": "https://github.com/greenjug/scenie#readme"
+}
