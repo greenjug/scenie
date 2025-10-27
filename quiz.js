@@ -1,5 +1,4 @@
-// Scenie Framework Quiz Module - v0.1.0
-const SCENIE_QUIZ_VERSION = '0.1.0';
+// Scenie Framework Quiz Module
 
 // Quiz-specific functionality for the Scenie game system
 
