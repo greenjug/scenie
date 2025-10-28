@@ -10,6 +10,7 @@ function Game(config) {
     this.currentScene = null;
     this.selectedAnswers = [];
     this.defaultScaleDuration = this.gameConfig.game.defaultScaleDuration || 500;
+    this.autoTransitionTimeout = null; // Store current autoTransition timeout
     
     // Quiz-related properties (will be used if quiz.js is loaded)
     this.quizConfig = null;
@@ -657,6 +658,12 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
     // Find the target scene config
     const targetSceneConfig = this.gameConfig.scenes.find(s => s.name === scene);
 
+    // Clear any existing autoTransition timeout
+    if (this.autoTransitionTimeout) {
+        clearTimeout(this.autoTransitionTimeout);
+        this.autoTransitionTimeout = null;
+    }
+
     currentSceneEl.classList.add('hidden');
     setTimeout(() => {
         currentSceneEl.style.display = 'none';
@@ -695,6 +702,14 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
         }
         if (targetSceneConfig.containerBackground) {
             this.setupBackground('game-container', targetSceneConfig.containerBackground);
+        }
+
+        // Set up autoTransition if configured
+        if (targetSceneConfig && targetSceneConfig.autoTransition) {
+            const { delay, scene: targetScene } = targetSceneConfig.autoTransition;
+            this.autoTransitionTimeout = setTimeout(() => {
+                this.switchScene(targetScene);
+            }, delay);
         }
 
         if (scene === 'gameplay') {
