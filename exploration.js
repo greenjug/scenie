@@ -11,7 +11,8 @@ Game.prototype.initExploration = function(config) {
         isDragging: false,
         dragOffset: { x: 0, y: 0 },
         currentPopup: null,
-        progressImageIndex: 0
+        progressImageIndex: 0,
+        hasInteracted: false
     };
 
     // Initialize magnifier position
@@ -64,6 +65,18 @@ Game.prototype.setupExplorationMagnifier = function() {
 
     // Add drag event listeners
     this.setupMagnifierDrag(magnifier);
+
+    // Add pulse animation if configured
+    if (config.magnifier.pulse) {
+        magnifier.classList.add('exploration-magnifier-pulse');
+        // Set custom properties for configurable duration and scale
+        if (config.magnifier.pulseDuration) {
+            magnifier.style.setProperty('--pulse-duration', config.magnifier.pulseDuration);
+        }
+        if (config.magnifier.pulseScale) {
+            magnifier.style.setProperty('--pulse-scale', config.magnifier.pulseScale);
+        }
+    }
 
     // Add to current scene
     const currentSceneEl = document.querySelector(`[data-scene="${this.currentScene}"]`);
@@ -150,6 +163,12 @@ Game.prototype.setupMagnifierDrag = function(magnifier) {
 Game.prototype.startMagnifierDrag = function(event, magnifier) {
     this.explorationState.isDragging = true;
     magnifier.style.cursor = 'grabbing';
+
+    // Stop pulse animation on first interaction
+    if (!this.explorationState.hasInteracted) {
+        this.explorationState.hasInteracted = true;
+        magnifier.classList.remove('exploration-magnifier-pulse');
+    }
 
     const rect = magnifier.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -563,7 +582,8 @@ Game.prototype.cleanupExploration = function() {
         isDragging: false,
         dragOffset: { x: 0, y: 0 },
         currentPopup: null,
-        progressImageIndex: 0
+        progressImageIndex: 0,
+        hasInteracted: false
     };
     // Don't clear this.explorationConfig - it comes from JSON and is needed for re-init
 };
