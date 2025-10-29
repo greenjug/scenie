@@ -4,7 +4,10 @@
   "description": "A modular JavaScript framework for creating interactive quizzes and games",
   "main": "core.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "minify": "npm run minify-js && npm run minify-css",
+    "minify-js": "terser core.js -o core.min.js && terser quiz.js -o quiz.min.js && terser bootstrap.js -o bootstrap.min.js && terser emit.js -o emit.min.js && terser exploration.js -o exploration.min.js",
+    "minify-css": "cleancss styles.css -o styles.min.css"
   },
   "repository": {
     "type": "git",
@@ -22,5 +25,9 @@
   "bugs": {
     "url": "https://github.com/greenjug/scenie/issues"
   },
-  "homepage": "https://github.com/greenjug/scenie#readme"
+  "homepage": "https://github.com/greenjug/scenie#readme",
+  "devDependencies": {
+    "clean-css-cli": "^5.6.3",
+    "terser": "^5.44.0"
+  }
 }
