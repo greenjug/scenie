@@ -10,7 +10,6 @@ function Game(config) {
     this.currentScene = null;
     this.selectedAnswers = [];
     this.defaultScaleDuration = this.gameConfig.game.defaultScaleDuration || 500;
-    this.autoTransitionTimeout = null; // Store current autoTransition timeout
     
     // Quiz-related properties (will be used if quiz.js is loaded)
     this.quizConfig = null;
@@ -18,6 +17,20 @@ function Game(config) {
     this.questionClicks = {};
     this.isInInterstitial = false;
     this.lastQuestionCorrect = null;
+    
+    // Exploration-related properties (will be used if exploration.js is loaded)
+    this.explorationConfig = null;
+    this.discoveredTargets = new Set();
+    this.explorationState = {
+        isDragging: false,
+        dragOffset: { x: 0, y: 0 },
+        currentPopup: null,
+        progressImageIndex: 0
+    };
+    this.dragUpdateListener = null;
+    this.dragEndListener = null;
+    this.touchUpdateListener = null;
+    this.touchEndListener = null;
     
     this.init();
 }
@@ -600,6 +613,12 @@ Game.prototype.createElement = function(element, parentElement) {
         this.currentQuestionIndex = 0;
         // Quiz elements are not visual, just configuration
         return;
+    } else if (element.type === 'exploration') {
+        // Exploration elements will be handled by exploration.js if loaded
+        // Store exploration config for later use
+        this.explorationConfig = element.config;
+        // Exploration elements are not visual, just configuration
+        return;
     }
 };
 
@@ -658,12 +677,6 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
     // Find the target scene config
     const targetSceneConfig = this.gameConfig.scenes.find(s => s.name === scene);
 
-    // Clear any existing autoTransition timeout
-    if (this.autoTransitionTimeout) {
-        clearTimeout(this.autoTransitionTimeout);
-        this.autoTransitionTimeout = null;
-    }
-
     currentSceneEl.classList.add('hidden');
     setTimeout(() => {
         currentSceneEl.style.display = 'none';
@@ -678,6 +691,11 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
             if (!this.isContinuingFromInterstitial && typeof this.resetQuizState === 'function') {
                 this.resetQuizState();
             }
+        }
+
+        // Clean up exploration if leaving an exploration scene
+        if (this.currentScene === 'exploration' && typeof this.cleanupExploration === 'function') {
+            this.cleanupExploration();
         }
 
         nextSceneEl.style.display = 'block';
@@ -704,12 +722,14 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
             this.setupBackground('game-container', targetSceneConfig.containerBackground);
         }
 
-        // Set up autoTransition if configured
-        if (targetSceneConfig && targetSceneConfig.autoTransition) {
-            const { delay, scene: targetScene } = targetSceneConfig.autoTransition;
-            this.autoTransitionTimeout = setTimeout(() => {
-                this.switchScene(targetScene);
-            }, delay);
+        // Clean up any leftover exploration elements
+        if (typeof this.cleanupExploration === 'function') {
+            this.cleanupExploration();
+        }
+
+        // Initialize exploration if this scene has exploration elements
+        if (scene === 'exploration' && this.explorationConfig && typeof this.initExploration === 'function') {
+            this.initExploration(this.explorationConfig);
         }
 
         if (scene === 'gameplay') {
