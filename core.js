@@ -173,11 +173,9 @@ Game.prototype.preloadAllImages = function() {
         const preloadContainer = document.createElement('div');
         preloadContainer.id = 'preload-container';
         preloadContainer.style.position = 'absolute';
-        preloadContainer.style.left = '-10000px';
-        preloadContainer.style.top = '-10000px';
-        preloadContainer.style.width = '1px';
-        preloadContainer.style.height = '1px';
-        preloadContainer.style.overflow = 'hidden';
+        preloadContainer.style.opacity = '0';
+        preloadContainer.style.pointerEvents = 'none';
+        preloadContainer.style.zIndex = '-1';
         document.body.appendChild(preloadContainer);
 
         // Store references to preloaded images to prevent garbage collection
@@ -209,7 +207,6 @@ Game.prototype.preloadAllImages = function() {
         const attemptLoadImage = (url, attempt = 1, isBackground = false) => {
             // For all images, create an img element to properly wait for load
             const img = document.createElement('img');
-            img.style.display = 'none';
             preloadContainer.appendChild(img);
             
             // Store reference to prevent garbage collection
@@ -339,6 +336,37 @@ Game.prototype.collectImageUrls = function() {
                         urls.add(element.url);
                     } else if (element.location === 'external') {
                         urls.add(element.url);
+                    }
+                }
+
+                // Exploration images
+                if (element.type === 'exploration' && element.config) {
+                    const config = element.config;
+                    
+                    // Add magnifier image
+                    if (config.magnifier && config.magnifier.image) {
+                        urls.add(config.magnifier.image);
+                    }
+
+                    // Add target images
+                    if (config.targets) {
+                        config.targets.forEach(target => {
+                            if (target.image) urls.add(target.image);
+                            if (target.discoveredImage) urls.add(target.discoveredImage);
+                            if (target.popup && target.popup.image) urls.add(target.popup.image);
+                        });
+                    }
+
+                    // Add progress images
+                    if (config.progress && config.progress.images) {
+                        Object.values(config.progress.images).forEach(image => {
+                            if (image) urls.add(image);
+                        });
+                    }
+
+                    // Add continue button image
+                    if (config.completion && config.completion.continueButton && config.completion.continueButton.image) {
+                        urls.add(config.completion.continueButton.image);
                     }
                 }
             });

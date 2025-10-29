@@ -23,19 +23,9 @@ Game.prototype.initExploration = function(config) {
 
     // Setup progress display
     this.setupExplorationProgress();
-
-    // Emit exploration_started event
-    if (window.emit) {
-        window.emit({
-            scene: this.currentScene,
-            sub_scene: '',
-            action: 'exploration_start',
-            self: '',
-            value: '',
-            target: ''
-        });
-    }
 };
+
+
 
 Game.prototype.setupExplorationMagnifier = function() {
     const config = this.explorationConfig;
@@ -177,18 +167,6 @@ Game.prototype.startMagnifierDrag = function(event, magnifier) {
         x: event.clientX - centerX,
         y: event.clientY - centerY
     };
-
-    // Emit drag start event
-    if (window.emit) {
-        window.emit({
-            scene: this.currentScene,
-            sub_scene: '',
-            action: 'magnifier_drag_start',
-            self: 'exploration-magnifier',
-            value: '',
-            target: ''
-        });
-    }
 };
 
 Game.prototype.updateMagnifierDrag = function(event, magnifier) {
@@ -225,18 +203,6 @@ Game.prototype.endMagnifierDrag = function(magnifier) {
 
     // Check for target hits
     this.checkTargetHits(magnifier);
-
-    // Emit drag end event
-    if (window.emit) {
-        window.emit({
-            scene: this.currentScene,
-            sub_scene: '',
-            action: 'magnifier_drag_end',
-            self: 'exploration-magnifier',
-            value: '',
-            target: ''
-        });
-    }
 };
 
 Game.prototype.checkTargetHits = function(magnifier) {
@@ -308,18 +274,6 @@ Game.prototype.discoverTarget = function(target, magnifier) {
 
     // Check for completion
     this.checkExplorationCompletion();
-
-    // Emit discovery event
-    if (window.emit) {
-        window.emit({
-            scene: this.currentScene,
-            sub_scene: '',
-            action: 'target_discovered',
-            self: target.id,
-            value: this.discoveredTargets.size.toString(),
-            target: ''
-        });
-    }
 };
 
 Game.prototype.showTargetPopup = function(target) {
@@ -500,6 +454,7 @@ Game.prototype.showExplorationContinueButton = function() {
     button.style.left = `${config.completion.continueButton.position.x}%`;
     button.style.top = `${config.completion.continueButton.position.y}%`;
     button.style.transform = 'translate(-50%, -50%)';
+    button.dataset.originalTransform = 'translate(-50%, -50%)';
     button.style.cursor = 'pointer';
     button.style.zIndex = '1001';
     button.style.opacity = '0';
@@ -521,7 +476,27 @@ Game.prototype.showExplorationContinueButton = function() {
     button.appendChild(img);
 
     button.addEventListener('click', () => {
-        this.switchScene(config.completion.continueButton.scene);
+        // Add scale animation like other clickable elements
+        const scaleDuration = config.completion.continueButton.scaleDuration || 250;
+        button.style.transition = `transform ${scaleDuration}ms ease`;
+        button.style.transform = button.dataset.originalTransform + ' scale(0.9)';
+        
+        // Emit continue button click event
+        if (window.emit) {
+            window.emit({
+                scene: this.currentScene,
+                sub_scene: '',
+                action: 'continue_button_click',
+                self: 'exploration-continue-btn',
+                value: '',
+                target: config.completion.continueButton.scene
+            });
+        }
+        
+        // Switch scene after animation
+        setTimeout(() => {
+            this.switchScene(config.completion.continueButton.scene);
+        }, scaleDuration);
     });
 
     // Add to scene
