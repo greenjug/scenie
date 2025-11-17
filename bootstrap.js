@@ -8,8 +8,13 @@
     const coreVersion = config.game.requiredCoreVersion || '0.1.2';
     const useCDN = config.game.useCDN !== false; // Default to true
 
-    // Load from CDN (jsDelivr is more reliable than raw GitHub)
-    const baseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${coreVersion}`;
+    // Load from CDN or local based on useCDN
+    let baseUrl;
+    if (useCDN) {
+        baseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${coreVersion}`;
+    } else {
+        baseUrl = '../../../../js/scenie-framework';
+    }
 
     // Load emit module first if required
     let emitVersion = null;
@@ -20,7 +25,12 @@
             emitVersion = emitReq.version;
             emitVerbosity = emitReq.verbosity || 'console';
             window.emitVerbosity = emitVerbosity;
-            const emitBaseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${emitVersion}`;
+            let emitBaseUrl;
+            if (useCDN) {
+                emitBaseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${emitVersion}`;
+            } else {
+                emitBaseUrl = '../../../../js/scenie-framework';
+            }
             await loadScript(`${emitBaseUrl}/emit.js`);
         }
     }
@@ -41,7 +51,12 @@
                 // Skip emit since it's already loaded
                 if (scriptName === 'emit') continue;
             }
-            const moduleBaseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${moduleVersion}`;
+            let moduleBaseUrl;
+            if (useCDN) {
+                moduleBaseUrl = `https://cdn.jsdelivr.net/gh/greenjug/scenie@v${moduleVersion}`;
+            } else {
+                moduleBaseUrl = '../../../../js/scenie-framework';
+            }
             await loadScript(`${moduleBaseUrl}/${scriptName}.js`);
         }
     }

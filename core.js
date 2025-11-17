@@ -66,6 +66,45 @@ Game.prototype.completeInit = function() {
             target: ''
         });
     }
+
+    // Check for track array and log records for initial scene
+    const initialSceneConfig = this.gameConfig.scenes.find(s => s.name === this.currentScene);
+    if (initialSceneConfig && initialSceneConfig.track) {
+        if (Array.isArray(initialSceneConfig.track)) {
+            console.log('Scenie-Framework: Track records found for scene', this.currentScene);
+            initialSceneConfig.track.forEach((record, index) => {
+                console.log(`Scenie-Framework: Track record ${index}:`, record);
+            });
+
+            // Send track to server if query exists
+            const query = new URLSearchParams(window.location.search).get('query');
+            if (query) {
+                const apiEndpoint = 'https://pmi.in-motion.video/campaign/breeze/set-retailer';
+                const objectName = this.gameConfig.game.name;
+                const items = initialSceneConfig.track.flatMap(record =>
+                    Object.entries(record).map(([key, value]) => ({ itemName: key, itemValue: value }))
+                );
+                fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ objectName, query, items })
+                }).then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                }).then(data => {
+                    console.log('Scenie-Framework: Track sent successfully for initial scene', data);
+                }).catch(error => {
+                    console.error('Scenie-Framework: Error sending track for initial scene', error);
+                });
+            } else {
+                console.log('Scenie-Framework: No query parameter found, skipping track send for initial scene');
+            }
+        } else {
+            console.log('Scenie-Framework: Track is not an array for scene', this.currentScene, initialSceneConfig.track);
+        }
+    } else {
+        console.log('Scenie-Framework: No track records for scene', this.currentScene);
+    }
     
     if (this.gameConfig.game.containerBackground) {
         this.setupBackground('game-container', this.gameConfig.game.containerBackground);
@@ -729,6 +768,44 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
         nextSceneEl.style.display = 'block';
         nextSceneEl.classList.remove('hidden');
         this.currentScene = scene;
+
+        // Check for track array and log records
+        if (targetSceneConfig && targetSceneConfig.track) {
+            if (Array.isArray(targetSceneConfig.track)) {
+                console.log('Scenie-Framework: Track records found for scene', scene);
+                targetSceneConfig.track.forEach((record, index) => {
+                    console.log(`Scenie-Framework: Track record ${index}:`, record);
+                });
+
+                // Send track to server if query exists
+                const query = new URLSearchParams(window.location.search).get('query');
+                if (query) {
+                    const apiEndpoint = 'https://pmi.in-motion.video/campaign/breeze/set-retailer';
+                    const objectName = this.gameConfig.game.name;
+                    const items = targetSceneConfig.track.flatMap(record =>
+                        Object.entries(record).map(([key, value]) => ({ itemName: key, itemValue: value }))
+                    );
+                    fetch(apiEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ objectName, query, items })
+                    }).then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        return response.json();
+                    }).then(data => {
+                        console.log('Scenie-Framework: Track sent successfully for scene', scene, data);
+                    }).catch(error => {
+                        console.error('Scenie-Framework: Error sending track for scene', scene, error);
+                    });
+                } else {
+                    console.log('Scenie-Framework: No query parameter found, skipping track send for scene', scene);
+                }
+            } else {
+                console.log('Scenie-Framework: Track is not an array for scene', scene, targetSceneConfig.track);
+            }
+        } else {
+            console.log('Scenie-Framework: No track records for scene', scene);
+        }
 
         // Emit scene_loaded event
         if (window.emit) {
