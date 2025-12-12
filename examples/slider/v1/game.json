@@ -1,0 +1,139 @@
+{
+    "game": {
+        "title": "Parliament Learning Module - Manhattan",
+        "containerAspectRatio": 0.49793103,
+        "mobileSize": 320,
+        "tabletSize": 768,
+        "desktopSize": 1024,
+        "resizeDebounce": 100,
+        "fadeDuration": 300,
+        "defaultScaleDuration": 500,
+        "preloadImages": true,
+        "requires": [{"module": "quiz", "version": "0.1.14"}, {"module": "emit", "version": "0.1.14", "verbosity": "console"}, {"module": "slider", "version": "0.1.14"}],
+        "requiredCoreVersion": "0.1.14",
+        "useCDN": false,
+        "pageBackground": [
+            { "type": "colour", "variant": "hex", "target": "all", "value": "000000" }
+        ],
+        "containerBackground": [
+            { "type": "image", "variant": "local", "target": "all", "value": "images/Red_mondule_landing-page_Background.webp" }
+        ]
+    },
+    "scenes": [
+        {
+            "name": "landing",
+            "initial": false,
+            "background": [
+                { "type": "image", "variant": "local", "target": "all", "value": "images/Red_mondule_landing-page_Background.webp" }
+            ],        
+            "containerBackground": [
+                { "type": "image", "variant": "local", "target": "all", "value": "images/Red_mondule_landing-page_Background.webp" }
+            ],                
+            "elements": [
+                { "id": "container1", "type": "container", "variant": "vflex", "elements": [
+                { "id": "landing1", "type": "picture", "location": "local", "url": "images/Red_mondule_landing-page_Logo.webp", "y": 10, "x": 50, "clickable": false, "aspectRatio": "314/172", "width": "50%" }
+                ] },
+                { "id": "slider1", "type": "slider", "x": 50, "y": 60, "width": "80%", "height": "40%", "config": {
+                    "slides": [
+                        {
+                            "background": [{"type": "colour", "variant": "hex", "value": "ff0000"}],
+                            "elements": [
+                                {"id": "slide1_text", "type": "picture", "location": "local", "url": "images/Red_mondule_landing-page_Text.webp", "y": 50, "x": 50, "clickable": true, "clickActions": [{"action": "slide", "target": "slider1", "value": 1}], "aspectRatio": "572/748", "width": "50%"}
+                            ]
+                        },
+                        {
+                            "background": [{"type": "colour", "variant": "hex", "value": "00ff00"}],
+                            "elements": [
+                                {"id": "slide2_text", "type": "picture", "location": "local", "url": "images/Red_mondule_landing-page_Text.webp", "y": 50, "x": 50, "clickable": true, "clickActions": [{"action": "slide", "target": "slider1", "value": 2}], "aspectRatio": "572/748", "width": "50%"}
+                            ]
+                        },
+                        {
+                            "background": [{"type": "colour", "variant": "hex", "value": "0000ff"}],
+                            "elements": [
+                                {"id": "slide3_text", "type": "picture", "location": "local", "url": "images/Red_mondule_landing-page_Text.webp", "y": 50, "x": 50, "clickable": true, "clickActions": [{"action": "slide", "target": "slider1", "value": 0}], "aspectRatio": "572/748", "width": "50%"}
+                            ]
+                        }
+                    ],
+                    "transitionDuration": 500,
+                    "showIndicators": false,
+                    "showArrows": false,
+                    "loop": true
+                }},
+                { "id": "container2", "type": "container", "variant": "vflex", "elements": [
+                { "id": "landing2", "type": "picture", "location": "local", "url": "images/Red_mondule_landing-page_Text.webp", "y": 50, "x": 50, "clickable": false, "aspectRatio": "572/748", "width": "65%",  "clickActions":[
+                    { "action": "scale", "target": "self", "value": "0.9", "duration": 250 },
+                    { "action": "navigate", "target": "scene", "value": "outcome_success" }
+                ] }
+                ] }
+            ]
+        },  
+
+        {
+            "name": "main_slider",
+            "initial": true,               
+            "elements": [
+                { "id": "container1", "type": "container", "variant": "vflex", "elements": [
+                { "id": "slider1", "type": "slider", "x": 50, "y": 50, "width": "100%", "height": "100%", "config": {
+                    "slides": [
+                        {
+                            "background": [{"type": "image", "variant": "local", "value": "images/Red_mondule_game_BronzeBG.webp"}],                                                        
+                            "elements": [
+                                {"id": "slide1_text", "type": "picture", "location": "local", "url": "images/Red_mondule_landing-page_Text.webp", "y": 50, "x": 50, "clickable": true, "clickActions": [
+                                    {"action": "slide", "target": "slider1", "value": 1}], "aspectRatio": "572/748", "width": "50%"}
+                            ]
+                        },
+                        {
+                            "background": [{"type": "colour", "variant": "hex", "value": "00ff00"}],
+                            "elements": [
+                                {"id": "slide2_text", "type": "picture", "location": "local", "url": "images/Red_mondule_landing-page_Text.webp", "y": 50, "x": 50, "clickable": true, "clickActions": [{"action": "slide", "target": "slider1", "value": 2}], "aspectRatio": "572/748", "width": "50%"}
+                            ]
+                        },
+                        {
+                            "background": [{"type": "colour", "variant": "hex", "value": "0000ff"}],
+                            "elements": [
+                                {"id": "slide3_text", "type": "picture", "location": "local", "url": "images/Red_mondule_landing-page_Text.webp", "y": 50, "x": 50, "clickable": true, "clickActions": [{"action": "slide", "target": "slider1", "value": 0}], "aspectRatio": "572/748", "width": "50%"}
+                            ]
+                        }
+                    ],
+                    "transitionDuration": 500,
+                    "showIndicators": false,
+                    "showArrows": false,
+                    "loop": true
+                }}
+                ] }
+            ]
+        },         
+        {
+            "name": "outcome_success",
+            "containerBackground": [
+                { "type": "image", "variant": "local", "target": "all", "value": "images/Red_mondule_landing-page_Background.webp" }
+            ],
+            "elements": [
+                { "id": "outcome_container", "type": "container", "variant": "vflex", "elements": [
+                    { "id": "outcome_image_1", "type": "picture", "location": "local", "url": "images/Red_Module_End_Text.webp", "y": 15, "x": 50, "clickable": false, "aspectRatio": "598/669", "width": "50%" },
+                    { "id": "outcome_button", "type": "picture", "location": "local", "url": "images/Red_Quiz_End_Win_Button.webp", "y": 50, "x": 50, "clickable": true, "aspectRatio": "401/119", "width": "65%",  "clickActions":[
+                        { "action": "scale", "target": "self", "value": "0.9", "duration": 250 },
+                        { "action": "navigate", "target": "scene", "value": "landing" }
+                    ] },                    
+                    { "id": "outcome_image_2", "type": "picture", "location": "local", "url": "images/Red_Module_End_Image.webp", "y": 39, "x": 50, "clickable": false, "aspectRatio": "750/972", "width": "62%" }
+                ]}
+            ]
+        },
+        {
+            "name": "outcome_failure",
+            "containerBackground": [
+                { "type": "image", "variant": "local", "target": "all", "value": "images/Red_mondule_landing-page_Background.webp" }
+            ],
+            "elements": [
+                { "id": "outcome_container", "type": "container", "variant": "vflex", "elements": [
+                    { "id": "outcome_image_1", "type": "picture", "location": "local", "url": "images/Red_Module_End_Text.webp", "y": 15, "x": 50, "clickable": false, "aspectRatio": "598/669", "width": "50%" },
+                    { "id": "outcome_button", "type": "picture", "location": "local", "url": "images/Red_Quiz_End_Win_Button.webp", "y": 50, "x": 50, "clickable": true, "aspectRatio": "401/119", "width": "65%",  "clickActions":[
+                        { "action": "scale", "target": "self", "value": "0.9", "duration": 250 },
+                        { "action": "navigate", "target": "scene", "value": "landing" }
+                    ] },                    
+                    { "id": "outcome_image_2", "type": "picture", "location": "local", "url": "images/Red_Module_End_Image.webp", "y": 39, "x": 50, "clickable": false, "aspectRatio": "750/972", "width": "62%" }
+                ]}
+            ]
+        }          
+    ]
+}

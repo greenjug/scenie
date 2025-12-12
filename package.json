@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "minify": "npm run minify-js && npm run minify-css",
-    "minify-js": "terser core.js -o core.min.js && terser quiz.js -o quiz.min.js && terser bootstrap.js -o bootstrap.min.js && terser emit.js -o emit.min.js && terser exploration.js -o exploration.min.js",
+    "minify-js": "terser core.js -o core.min.js && terser quiz.js -o quiz.min.js && terser bootstrap.js -o bootstrap.min.js && terser emit.js -o emit.min.js && terser exploration.js -o exploration.min.js && terser slider.js -o slider.min.js",
     "minify-css": "cleancss styles.css -o styles.min.css"
   },
   "repository": {

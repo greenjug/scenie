@@ -686,6 +686,12 @@ Game.prototype.createElement = function(element, parentElement) {
         this.explorationConfig = element.config;
         // Exploration elements are not visual, just configuration
         return;
+    } else if (element.type === 'slider') {
+        // Slider elements will be handled by slider.js if loaded
+        // Store slider config for later use
+        this.sliderConfig = element.config;
+        // Slider elements are not visual, just configuration
+        return;
     }
 };
 
@@ -732,6 +738,11 @@ Game.prototype.executeClickActions = function(actions, targetElement) {
             // This will be handled by quiz.js if loaded
             if (typeof this.continueFromInterstitial === 'function') {
                 this.continueFromInterstitial();
+            }
+        } else if (action.action === 'slide') {
+            // Navigate to specific slide in slider
+            if (typeof this.goToSlide === 'function') {
+                this.goToSlide(action.target, parseInt(action.value));
             }
         }
     });
