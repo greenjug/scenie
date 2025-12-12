@@ -780,6 +780,11 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
         nextSceneEl.classList.remove('hidden');
         this.currentScene = scene;
 
+        // Reset sliders if configured
+        if (targetSceneConfig && targetSceneConfig.elements) {
+            this.resetSlidersInElements(targetSceneConfig.elements);
+        }
+
         // Check for track array and log records
         if (targetSceneConfig && targetSceneConfig.track) {
             if (Array.isArray(targetSceneConfig.track)) {
@@ -923,4 +928,18 @@ Game.prototype.clearSceneElements = function(elements) {
 
 Game.prototype.resetGameplay = function() {
     // Placeholder for gameplay reset - can be overridden
+};
+
+Game.prototype.resetSlidersInElements = function(elements) {
+    if (!elements) return;
+    elements.forEach(element => {
+        if (element.type === 'slider' && element.config && element.config.resetOnSceneEnter) {
+            if (typeof this.goToSlide === 'function') {
+                this.goToSlide(element.id, 0);
+            }
+        } else if (element.type === 'container' && element.elements) {
+            // Recurse into container elements
+            this.resetSlidersInElements(element.elements);
+        }
+    });
 };

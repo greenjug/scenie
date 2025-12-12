@@ -15,6 +15,7 @@ The Slider component provides touch/swipe navigation through a series of slides,
 - **Background Support**: Each slide can have color or image backgrounds
 - **Element Integration**: Full support for all Scenie element types within slides
 - **Responsive Design**: Slides automatically adapt to container size
+- **Scene Reset**: Optional automatic reset to first slide when re-entering scene
 
 ### Interactivity
 - **Clickable Elements**: Elements within slides can be made clickable
@@ -55,7 +56,8 @@ Add a slider to your game configuration:
         "transitionDuration": 500,
         "showIndicators": true,
         "showArrows": true,
-        "loop": true
+        "loop": true,
+        "resetOnSceneEnter": true
     }
 }
 ```
@@ -69,6 +71,7 @@ Add a slider to your game configuration:
 | `showIndicators` | Boolean | `true` | Show dot indicators |
 | `showArrows` | Boolean | `true` | Show navigation arrows |
 | `loop` | Boolean | `false` | Enable infinite looping |
+| `resetOnSceneEnter` | Boolean | `false` | Reset to first slide when scene is entered |
 
 ### Slide Configuration
 
