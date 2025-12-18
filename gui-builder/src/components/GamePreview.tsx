@@ -37,6 +37,29 @@ export function GamePreview({
   const [rulerHoverX, setRulerHoverX] = useState<number | null>(null);
   const [showRulers, setShowRulers] = useState<boolean>(true);
   const [showGrid, setShowGrid] = useState<boolean>(false);
+  // Persisted UI toggles
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem('scenie.showRulers');
+      if (s !== null) setShowRulers(s === 'true');
+      const g = localStorage.getItem('scenie.showGrid');
+      if (g !== null) setShowGrid(g === 'true');
+    } catch (e) {
+      // ignore (SSR or storage blocked)
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('scenie.showRulers', showRulers ? 'true' : 'false');
+    } catch (e) {}
+  }, [showRulers]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('scenie.showGrid', showGrid ? 'true' : 'false');
+    } catch (e) {}
+  }, [showGrid]);
   const [autoZoom, setAutoZoom] = useState<number>(100);
   const containerRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -553,7 +576,7 @@ export function GamePreview({
           )}
 
           <div
-            className="bg-white border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden"
+            className="bg-white border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden transition-all duration-200 ease-in-out"
             style={{
               width: `${(currentDevice.width * effectiveZoom) / 100}px`,
               height: `${(currentDevice.height * effectiveZoom) / 100}px`
