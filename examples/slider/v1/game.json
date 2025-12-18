@@ -9,8 +9,8 @@
         "fadeDuration": 300,
         "defaultScaleDuration": 500,
         "preloadImages": true,
-        "requires": [{"module": "quiz", "version": "0.1.15"}, {"module": "emit", "version": "0.1.15", "verbosity": "console"}, {"module": "slider", "version": "0.1.15"}],
-        "requiredCoreVersion": "0.1.15",
+        "requires": [{"module": "emit", "version": "0.1.16", "verbosity": "console"}, {"module": "slider", "version": "0.1.16"}],
+        "requiredCoreVersion": "0.1.16",
         "useCDN": true,
         "pageBackground": [
             { "type": "colour", "variant": "hex", "target": "all", "value": "000000" }
@@ -22,7 +22,7 @@
     "scenes": [
         {
             "name": "landing",
-            "initial": false,
+            "initial": true,
             "background": [
                 { "type": "image", "variant": "local", "target": "all", "value": "images/Red_mondule_landing-page_Background.webp" }
             ],        
@@ -89,7 +89,6 @@
         },         
         {
             "name": "outcome_success",
-            "initial": true,               
             "containerBackground": [
                 { "type": "image", "variant": "local", "target": "all", "value": "images/Red_mondule_landing-page_Background.webp" }
             ],

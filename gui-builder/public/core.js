@@ -355,7 +355,6 @@ Game.prototype.collectImageUrls = function() {
 
     // Collect from scenes
     this.gameConfig.scenes.forEach(scene => {
-        if (!scene || typeof scene !== 'object') return; // Skip invalid scenes
         processBackgrounds(scene.background, true);
         processBackgrounds(scene.pageBackground, true);
         processBackgrounds(scene.containerBackground, true);
@@ -837,10 +836,10 @@ Game.prototype.switchScene = function(scene, duration = this.gameConfig.game.fad
         }
 
         // Apply scene-specific background overrides
-        if (targetSceneConfig && targetSceneConfig.pageBackground) {
+        if (targetSceneConfig.pageBackground) {
             this.setupBackground('background', targetSceneConfig.pageBackground);
         }
-        if (targetSceneConfig && targetSceneConfig.containerBackground) {
+        if (targetSceneConfig.containerBackground) {
             this.setupBackground('game-container', targetSceneConfig.containerBackground);
         }
 
@@ -944,3 +943,6 @@ Game.prototype.resetSlidersInElements = function(elements) {
         }
     });
 };
+
+// Make Game constructor globally available
+window.Game = Game;
