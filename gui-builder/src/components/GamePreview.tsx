@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, RotateCcw, Smartphone, Tablet, Monitor, Settings, Bug } from 'lucide-react';
+import { Play, Pause, RotateCcw, Smartphone, Tablet, Monitor, Settings, Bug, Ruler } from 'lucide-react';
 import { useEditorStore } from '@/lib/store';
 
 // Add global types for Scenie
@@ -35,8 +35,13 @@ export function GamePreview({
   const [isDragOver, setIsDragOver] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [rulerHoverX, setRulerHoverX] = useState<number | null>(null);
+  const [showRulers, setShowRulers] = useState<boolean>(true);
+  const [showGrid, setShowGrid] = useState<boolean>(false);
+  const [autoZoom, setAutoZoom] = useState<number>(100);
   const containerRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
+  const topRulerRef = useRef<HTMLDivElement>(null);
+  const bottomRulerRef = useRef<HTMLDivElement>(null);
 
   const gameConfig = useEditorStore(state => state.validatedGameConfig);
 
@@ -57,7 +62,22 @@ export function GamePreview({
     
     // Available space accounts for padding (p-4 = 16px on each side)
     const availableWidth = containerRect.width - 32; // 16px padding on each side
-    const availableHeight = containerRect.height - 32; // 16px padding on each side
+    let availableHeight = containerRect.height - 32; // 16px padding on each side
+
+    // If rulers are visible, subtract their heights (including margins) from available height
+    if (showRulers) {
+      const measureWithMargins = (el: HTMLDivElement | null) => {
+        if (!el) return 0;
+        const rect = el.getBoundingClientRect();
+        const style = window.getComputedStyle(el);
+        const marginTop = parseFloat(style.marginTop || '0');
+        const marginBottom = parseFloat(style.marginBottom || '0');
+        return rect.height + marginTop + marginBottom;
+      };
+
+      availableHeight -= measureWithMargins(topRulerRef.current as HTMLDivElement);
+      availableHeight -= measureWithMargins(bottomRulerRef.current as HTMLDivElement);
+    }
     
     const widthRatio = availableWidth / currentDevice.width;
     const heightRatio = availableHeight / currentDevice.height;
@@ -69,8 +89,44 @@ export function GamePreview({
     return Math.max(10, Math.min(200, autoZoom));
   };
 
-  // Get the effective zoom value (calculate if auto)
-  const effectiveZoom = zoom === 'auto' ? calculateAutoZoom() : zoom;
+  // Get the effective zoom value (use precomputed autoZoom when in 'auto')
+  const effectiveZoom = zoom === 'auto' ? autoZoom : zoom;
+
+  // Recalculate auto zoom when relevant dependencies change (wait a frame so DOM updates render first)
+  useEffect(() => {
+    if (zoom !== 'auto') return;
+
+    let raf = 0;
+    const recalc = () => {
+      try {
+        const z = calculateAutoZoom();
+        setAutoZoom(z);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    // Wait for layout to reflect any recent DOM changes (like toggling rulers)
+    raf = requestAnimationFrame(() => {
+      // do another frame in case elements are still being inserted
+      requestAnimationFrame(recalc);
+    });
+
+    const onResize = () => {
+      // debounce with rAF
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(recalc);
+    };
+
+    window.addEventListener('resize', onResize);
+    // initial recalc
+    recalc();
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [zoom, showRulers, deviceType, previewContainerRef.current, topRulerRef.current, bottomRulerRef.current]);
 
   // Load and initialize Scenie game
   useEffect(() => {
@@ -392,6 +448,27 @@ export function GamePreview({
               <Settings className="w-4 h-4" />
             </button>
 
+            {/* Ruler Toggle */}
+            <button
+              onClick={() => setShowRulers(s => !s)}
+              className={`p-2 rounded ${showRulers ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
+              title="Toggle Rulers"
+            >
+              <Ruler className="w-4 h-4" />
+            </button>
+
+            {/* Grid Toggle */}
+            <button
+              onClick={() => setShowGrid(s => !s)}
+              className={`p-2 rounded ${showGrid ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'}`}
+              title="Toggle Grid"
+            >
+              {/* Simple grid SVG */}
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M8 3v18M16 3v18M3 8h18M3 16h18" />
+              </svg>
+            </button>
+
             <button
               onClick={() => setShowDebugPanel(true)}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
@@ -409,15 +486,12 @@ export function GamePreview({
         className="absolute top-20 bottom-4 left-0 right-0 flex flex-col items-center justify-start p-4 overflow-auto"
       >
         {/* Top Ruler */}
-        <div 
-          className="flex items-center mb-2 mt-2" 
-          style={{ width: `${(currentDevice.width * effectiveZoom) / 100}px` }}
-          onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            setRulerHoverX(e.clientX - rect.left);
-          }}
-          onMouseLeave={() => setRulerHoverX(null)}
-        >
+        {showRulers && (
+          <div 
+            ref={topRulerRef}
+            className="flex items-center mb-2 mt-2" 
+            style={{ width: `${(currentDevice.width * effectiveZoom) / 100}px` }}
+          >
           <div className="flex-1 h-px bg-gray-400 relative">
             <div className="absolute left-0 top-0 w-full h-full">
               {Array.from({ length: Math.ceil(currentDevice.width / 20) + 1 }, (_, i) => {
@@ -436,13 +510,42 @@ export function GamePreview({
                 );
               })}
             </div>
+            {/* Transparent overlay to capture hover across the entire ruler (expanded hit area) */}
+            <div
+              className="absolute left-0 -top-6 w-full h-8 z-20 bg-transparent"
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setRulerHoverX(e.clientX - rect.left);
+              }}
+              onMouseLeave={() => setRulerHoverX(null)}
+            />
           </div>
         </div>
+        )}
 
         {/* GamePreview with Rulers Wrapper */}
         <div className="relative inline-block">
+          {/* Grid overlay */}
+          {showGrid && (
+            <>
+              {/* Vertical grid: 25%, 33.333% (dashed), 50%, 66.666% (dashed), 75% */}
+              <div className="absolute top-0 bottom-0 left-1/4 w-px bg-blue-300 opacity-70 z-10 pointer-events-none" style={{ left: '25%' }} />
+              <div className="absolute top-0 bottom-0 z-10 pointer-events-none" style={{ left: '33.333333%', borderLeft: '1px dashed rgba(59,130,246,0.7)', position: 'absolute', top: 0, bottom: 0 }} />
+              <div className="absolute top-0 bottom-0 left-1/2 w-px bg-blue-300 opacity-70 z-10 pointer-events-none" style={{ left: '50%' }} />
+              <div className="absolute top-0 bottom-0 z-10 pointer-events-none" style={{ left: '66.666667%', borderLeft: '1px dashed rgba(59,130,246,0.7)', position: 'absolute', top: 0, bottom: 0 }} />
+              <div className="absolute top-0 bottom-0 left-3/4 w-px bg-blue-300 opacity-70 z-10 pointer-events-none" style={{ left: '75%' }} />
+
+              {/* Horizontal grid: 25%, 33.333% (dashed), 50%, 66.666% (dashed), 75% */}
+              <div className="absolute left-0 right-0 top-1/4 h-px bg-blue-300 opacity-70 z-10 pointer-events-none" style={{ top: '25%' }} />
+              <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ top: '33.333333%', borderTop: '1px dashed rgba(59,130,246,0.7)', position: 'absolute', left: 0, right: 0 }} />
+              <div className="absolute left-0 right-0 top-1/2 h-px bg-blue-300 opacity-70 z-10 pointer-events-none" style={{ top: '50%' }} />
+              <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ top: '66.666667%', borderTop: '1px dashed rgba(59,130,246,0.7)', position: 'absolute', left: 0, right: 0 }} />
+              <div className="absolute left-0 right-0 top-3/4 h-px bg-blue-300 opacity-70 z-10 pointer-events-none" style={{ top: '75%' }} />
+            </>
+          )}
+
           {/* Ruler Hover Line */}
-          {rulerHoverX !== null && (
+          {showRulers && rulerHoverX !== null && (
             <div
               className="absolute top-0 bottom-0 w-px bg-blue-500 z-10 pointer-events-none"
               style={{ left: `${rulerHoverX}px` }}
@@ -521,15 +624,12 @@ export function GamePreview({
         </div>
 
         {/* Bottom Ruler */}
-        <div 
-          className="flex items-center mt-2" 
-          style={{ width: `${(currentDevice.width * effectiveZoom) / 100}px` }}
-          onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            setRulerHoverX(e.clientX - rect.left);
-          }}
-          onMouseLeave={() => setRulerHoverX(null)}
-        >
+        {showRulers && (
+          <div 
+            ref={bottomRulerRef}
+            className="flex items-center mt-2" 
+            style={{ width: `${(currentDevice.width * effectiveZoom) / 100}px` }}
+          >
           <div className="flex-1 h-px bg-gray-400 relative">
             <div className="absolute left-0 bottom-0 w-full h-full">
               {Array.from({ length: Math.ceil(currentDevice.width / 20) + 1 }, (_, i) => {
@@ -548,8 +648,18 @@ export function GamePreview({
                 );
               })}
             </div>
+            {/* Transparent overlay to capture hover across the entire ruler (expanded hit area) */}
+            <div
+              className="absolute left-0 -bottom-6 w-full h-8 z-20 bg-transparent"
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setRulerHoverX(e.clientX - rect.left);
+              }}
+              onMouseLeave={() => setRulerHoverX(null)}
+            />
           </div>
         </div>
+        )}
       </div>
 
       {/* Debug Panel Overlay */}
