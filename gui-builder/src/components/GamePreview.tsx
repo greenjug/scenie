@@ -37,6 +37,8 @@ export function GamePreview({
   const [rulerHoverX, setRulerHoverX] = useState<number | null>(null);
   const [showRulers, setShowRulers] = useState<boolean>(true);
   const [showGrid, setShowGrid] = useState<boolean>(false);
+  const [previewWidth, setPreviewWidth] = useState<number>(1024); // Default to desktop width
+  
   // Persisted UI toggles
   useEffect(() => {
     try {
@@ -74,7 +76,19 @@ export function GamePreview({
     desktop: { width: 1024, height: 768 }
   };
 
+  const resizeRanges = {
+    mobile: { min: 320, max: 599 },
+    tablet: { min: 600, max: 999 },
+    desktop: { min: 1000, max: 2200 }
+  };
+
   const currentDevice = deviceSizes[deviceType];
+  const currentRange = resizeRanges[deviceType];
+
+  // Update previewWidth when deviceType changes
+  useEffect(() => {
+    setPreviewWidth(Math.max(currentRange.min, Math.min(currentRange.max, previewWidth)));
+  }, [deviceType, currentRange.min, currentRange.max]);
 
   // Calculate auto zoom to fit device in available space
   const calculateAutoZoom = () => {
@@ -102,7 +116,7 @@ export function GamePreview({
       availableHeight -= measureWithMargins(bottomRulerRef.current as HTMLDivElement);
     }
     
-    const widthRatio = availableWidth / currentDevice.width;
+    const widthRatio = availableWidth / previewWidth;
     const heightRatio = availableHeight / currentDevice.height;
     
     // Use the smaller ratio to ensure the device fits completely
@@ -149,7 +163,7 @@ export function GamePreview({
       if (raf) cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
     };
-  }, [zoom, showRulers, deviceType, previewContainerRef.current, topRulerRef.current, bottomRulerRef.current]);
+  }, [zoom, showRulers, deviceType, previewWidth, previewContainerRef.current, topRulerRef.current, bottomRulerRef.current]);
 
   // Load and initialize Scenie game
   useEffect(() => {
@@ -279,6 +293,8 @@ export function GamePreview({
   useEffect(() => {
     updateElementSelectionVisual(selectedElement);
   }, [selectedElement]);
+
+  
 
   const setupElementSelection = (game: any) => {
     if (!game) return;
@@ -446,6 +462,11 @@ export function GamePreview({
               <option value={150}>150%</option>
             </select>
 
+            {/* Width Display */}
+            <span className="text-sm text-gray-600 px-2">
+              {Math.round(previewWidth)}px
+            </span>
+
             {/* Controls */}
             <button
               onClick={() => setIsPlaying(!isPlaying)}
@@ -492,6 +513,8 @@ export function GamePreview({
               </svg>
             </button>
 
+            
+
             <button
               onClick={() => setShowDebugPanel(true)}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
@@ -513,15 +536,15 @@ export function GamePreview({
           <div 
             ref={topRulerRef}
             className="flex items-center mb-2 mt-2" 
-            style={{ width: `${(currentDevice.width * effectiveZoom) / 100}px` }}
+            style={{ width: `${(previewWidth * effectiveZoom) / 100}px` }}
           >
           <div className="flex-1 h-px bg-gray-400 relative">
             <div className="absolute left-0 top-0 w-full h-full">
-              {Array.from({ length: Math.ceil(currentDevice.width / 20) + 1 }, (_, i) => {
-                const position = Math.min(i * 20, currentDevice.width);
+              {Array.from({ length: Math.ceil(previewWidth / 20) + 1 }, (_, i) => {
+                const position = Math.min(i * 20, previewWidth);
                 const isMajorMark = position % 100 === 0;
-                const isLastMark = position === currentDevice.width;
-                const shouldShowNumber = (isMajorMark || isLastMark) && (isLastMark || position <= currentDevice.width - 40);
+                const isLastMark = position === previewWidth;
+                const shouldShowNumber = isLastMark || (isMajorMark && position <= previewWidth - 60);
                 return (
                   <div key={i} className={`absolute top-0 border-l ${isMajorMark ? 'h-3 border-gray-600' : 'h-2 border-gray-500'}`} style={{ left: `${(position * effectiveZoom) / 100}px` }}>
                     {shouldShowNumber && (
@@ -578,45 +601,45 @@ export function GamePreview({
           <div
             className="bg-white border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden transition-all duration-200 ease-in-out"
             style={{
-              width: `${(currentDevice.width * effectiveZoom) / 100}px`,
+              width: `${(previewWidth * effectiveZoom) / 100}px`,
               height: `${(currentDevice.height * effectiveZoom) / 100}px`
             }}
           >
-          <div
-            ref={containerRef}
-            className={`w-full h-full relative transition-colors ${
-              isDragOver ? 'bg-blue-50 border-2 border-blue-300 border-dashed' : ''
-            }`}
-            style={{ backgroundColor: isDragOver ? '#eff6ff' : '#f3f4f6' }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'copy';
-              setIsDragOver(true);
-            }}
-            onDragLeave={(e) => {
-              // Only set drag over to false if we're actually leaving the element
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setIsDragOver(false);
-              }
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDragOver(false);
-              try {
-                const data = JSON.parse(e.dataTransfer.getData('application/json'));
-                if (data.type === 'element') {
-                  // Calculate position relative to the container
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = ((e.clientX - rect.left) / rect.width) * 100;
-                  const y = ((e.clientY - rect.top) / rect.height) * 100;
-                  
-                  onElementAdd(data.elementType, { x: Math.round(x), y: Math.round(y) });
+            <div
+              ref={containerRef}
+              className={`w-full h-full relative transition-colors ${
+                isDragOver ? 'bg-blue-50 border-2 border-blue-300 border-dashed' : ''
+              }`}
+              style={{ backgroundColor: isDragOver ? '#eff6ff' : '#f3f4f6' }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+                setIsDragOver(true);
+              }}
+              onDragLeave={(e) => {
+                // Only set drag over to false if we're actually leaving the element
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  setIsDragOver(false);
                 }
-              } catch (error) {
-                console.error('Failed to parse drop data:', error);
-              }
-            }}
-          >
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragOver(false);
+                try {
+                  const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                  if (data.type === 'element') {
+                    // Calculate position relative to the container
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    
+                    onElementAdd(data.elementType, { x: Math.round(x), y: Math.round(y) });
+                  }
+                } catch (error) {
+                  console.error('Failed to parse drop data:', error);
+                }
+              }}
+            >
             {/* Drag overlay */}
             {isDragOver && (
               <div className="absolute inset-0 bg-blue-500 bg-opacity-10 border-2 border-blue-500 border-dashed rounded-lg flex items-center justify-center z-10">
@@ -644,6 +667,34 @@ export function GamePreview({
           </div>
         </div>
 
+        {/* Resize Handle - Outside the preview wrapper */}
+        <div
+          className="absolute right-[-16px] top-1/2 transform -translate-y-1/2 w-2 h-16 bg-gray-300 hover:bg-gray-400 cursor-ew-resize flex items-center justify-center z-20 rounded"
+          style={{ marginTop: showRulers ? '20px' : '0' }} // Adjust for rulers
+          onMouseDown={(e) => {
+            e.preventDefault();
+            const startX = e.clientX;
+            const startWidth = previewWidth;
+
+            const handleMouseMove = (moveEvent: MouseEvent) => {
+              const deltaX = moveEvent.clientX - startX;
+              const newWidth = startWidth + (deltaX / effectiveZoom) * 100;
+              const clampedWidth = Math.max(currentRange.min, Math.min(currentRange.max, Math.round(newWidth)));
+              setPreviewWidth(clampedWidth);
+            };
+
+            const handleMouseUp = () => {
+              document.removeEventListener('mousemove', handleMouseMove);
+              document.removeEventListener('mouseup', handleMouseUp);
+            };
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+          }}
+        >
+          <div className="w-1 h-8 bg-gray-500 rounded"></div>
+        </div>
+
         </div>
 
         {/* Bottom Ruler */}
@@ -651,15 +702,15 @@ export function GamePreview({
           <div 
             ref={bottomRulerRef}
             className="flex items-center mt-2" 
-            style={{ width: `${(currentDevice.width * effectiveZoom) / 100}px` }}
+            style={{ width: `${(previewWidth * effectiveZoom) / 100}px` }}
           >
           <div className="flex-1 h-px bg-gray-400 relative">
             <div className="absolute left-0 bottom-0 w-full h-full">
-              {Array.from({ length: Math.ceil(currentDevice.width / 20) + 1 }, (_, i) => {
-                const position = Math.min(i * 20, currentDevice.width);
+              {Array.from({ length: Math.ceil(previewWidth / 20) + 1 }, (_, i) => {
+                const position = Math.min(i * 20, previewWidth);
                 const isMajorMark = position % 100 === 0;
-                const isLastMark = position === currentDevice.width;
-                const shouldShowNumber = (isMajorMark || isLastMark) && (isLastMark || position <= currentDevice.width - 40);
+                const isLastMark = position === previewWidth;
+                const shouldShowNumber = isLastMark || (isMajorMark && position <= previewWidth - 60);
                 return (
                   <div key={i} className={`absolute bottom-0 border-l ${isMajorMark ? 'h-3 border-gray-600' : 'h-2 border-gray-500'}`} style={{ left: `${(position * effectiveZoom) / 100}px` }}>
                     {shouldShowNumber && (
