@@ -38,6 +38,7 @@ export function GamePreview({
   const [showRulers, setShowRulers] = useState<boolean>(true);
   const [showGrid, setShowGrid] = useState<boolean>(false);
   const [previewWidth, setPreviewWidth] = useState<number>(1024); // Default to desktop width
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   // Persisted UI toggles
   useEffect(() => {
@@ -46,10 +47,12 @@ export function GamePreview({
       if (s !== null) setShowRulers(s === 'true');
       const g = localStorage.getItem('scenie.showGrid');
       if (g !== null) setShowGrid(g === 'true');
+      const w = localStorage.getItem(`scenie.previewWidth.${deviceType}`);
+      if (w !== null) setPreviewWidth(parseInt(w, 10) || deviceSizes[deviceType].width);
     } catch (e) {
       // ignore (SSR or storage blocked)
     }
-  }, []);
+  }, [deviceType]);
 
   useEffect(() => {
     try {
@@ -62,6 +65,12 @@ export function GamePreview({
       localStorage.setItem('scenie.showGrid', showGrid ? 'true' : 'false');
     } catch (e) {}
   }, [showGrid]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`scenie.previewWidth.${deviceType}`, previewWidth.toString());
+    } catch (e) {}
+  }, [previewWidth, deviceType]);
   const [autoZoom, setAutoZoom] = useState<number>(100);
   const containerRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -71,7 +80,7 @@ export function GamePreview({
   const gameConfig = useEditorStore(state => state.validatedGameConfig);
 
   const deviceSizes = {
-    mobile: { width: 375, height: 667 },
+    mobile: { width: 414, height: 667 },
     tablet: { width: 768, height: 1024 },
     desktop: { width: 1024, height: 768 }
   };
@@ -85,10 +94,10 @@ export function GamePreview({
   const currentDevice = deviceSizes[deviceType];
   const currentRange = resizeRanges[deviceType];
 
-  // Update previewWidth when deviceType changes
+  // Update previewWidth when deviceType changes - snap to default size
   useEffect(() => {
-    setPreviewWidth(Math.max(currentRange.min, Math.min(currentRange.max, previewWidth)));
-  }, [deviceType, currentRange.min, currentRange.max]);
+    setPreviewWidth(deviceSizes[deviceType].width);
+  }, [deviceType]);
 
   // Calculate auto zoom to fit device in available space
   const calculateAutoZoom = () => {
@@ -172,6 +181,7 @@ export function GamePreview({
     }
 
     const loadAndInitGame = async () => {
+      setIsLoading(true);
       try {
         // Clean up previous game instance
         if (gameInstance) {
@@ -254,6 +264,7 @@ export function GamePreview({
 
       } catch (error) {
         console.error('Failed to initialize game:', error);
+        setIsLoading(false);
         if (containerRef.current) {
           containerRef.current.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: red;">
@@ -264,6 +275,8 @@ export function GamePreview({
             </div>
           `;
         }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -655,7 +668,14 @@ export function GamePreview({
             )}
 
             {/* Scenie game will be rendered here */}
-            {!gameConfig && (
+            {isLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                  <p className="text-lg font-medium">Loading game...</p>
+                </div>
+              </div>
+            ) : !gameConfig ? (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="text-center text-gray-500">
                   <Monitor className="w-16 h-16 mx-auto mb-4 opacity-50" />
@@ -663,14 +683,15 @@ export function GamePreview({
                   <p className="text-sm mt-2">Create a game to see the preview</p>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
         {/* Resize Handle - Outside the preview wrapper */}
         <div
-          className="absolute right-[-16px] top-1/2 transform -translate-y-1/2 w-2 h-16 bg-gray-300 hover:bg-gray-400 cursor-ew-resize flex items-center justify-center z-20 rounded"
-          style={{ marginTop: showRulers ? '20px' : '0' }} // Adjust for rulers
+          className="absolute right-[-16px] top-1/2 transform -translate-y-1/2 w-2 h-16 bg-gray-300 hover:bg-blue-400 cursor-ew-resize flex items-center justify-center z-20 rounded transition-colors duration-200"
+          style={{ marginTop: showRulers ? '20px' : '0' }}
+          title="Drag to resize preview width"
           onMouseDown={(e) => {
             e.preventDefault();
             const startX = e.clientX;
